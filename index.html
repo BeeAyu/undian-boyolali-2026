@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>DOORPRIZE GEBYAR UNDIAN SIMPANAN 2026 | PT BPR BKK BOYOLALI</title>
+    <link rel="icon" href="./assets/logo-bkk.png" type="image/svg+xml">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        .doorprize-running-text {
+            width: 100%;
+            overflow: hidden;
+            margin: 12px 0 4px;
+            padding: 10px 0;
+            border: 1px solid rgba(255, 202, 59, .55);
+            border-radius: 10px;
+            background: linear-gradient(90deg, #071a37, #123d72, #071a37);
+            color: #ffdc78;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
+            white-space: nowrap;
+        }
+
+        .doorprize-running-text span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: doorprizeTicker 24s linear infinite;
+            font-size: clamp(12px, 1.25vw, 16px);
+            font-weight: 800;
+            letter-spacing: .45px;
+        }
+
+        @keyframes doorprizeTicker {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        body.fullscreen-mode #stage .doorprize-running-text,
+        #stage:fullscreen .doorprize-running-text {
+            flex: 0 0 auto;
+            margin-top: clamp(10px, 1.5vh, 18px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .doorprize-running-text span {
+                animation-duration: 60s;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="./script.js" defer></script>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand"><img class="brand-logo" src="./assets/logo-bkk.png" alt="Logo BPR BKK">
+            <div>
+                <h1>DOORPRIZE GEBYAR UNDIAN SIMPANAN 2026</h1>
+                <p>PT BPR BKK BOYOLALI (Perseroda)</p>
+            </div>
+        </div>
+        <div class="top-actions"><button class="btn outline" id="btnSound">🔊 SUARA AKTIF</button><button
+                class="btn outline" id="btnFullscreen">⛶ FULLSCREEN</button></div>
+    </header>
+    <main class="container">
+        <section class="panel settings-panel">
+            <h2>Pengaturan Undian</h2>
+            <div class="form-grid">
+                <div class="form-group"><label for="fileExcel">Import data peserta (Excel/CSV)</label><input type="file"
+                        id="fileExcel" accept=".xlsx,.xls,.csv"><small>Gunakan kolom: NO_URUT, NO_KUPON, NAMA_PESERTA. Setiap baris merupakan satu kupon unik.</small><button type="button" class="btn neutral full" id="btnTemplate">⬇ DOWNLOAD TEMPLATE EXCEL</button>
+                </div>
+                <div class="form-group"><label for="pilihanHadiah">Pilih hadiah</label><select id="pilihanHadiah">
+                        <option value="KOMPOR GAS">Kompor Gas</option>
+                        <option value="MAGIC COM">Magic Com</option>
+                        <option value="KIPAS ANGIN">Kipas Angin</option>
+                        <option value="MESIN CUCI">Mesin Cuci</option>
+                        <option value="TELEVISI LED 43\"">Televisi LED 43&quot;</option>
+                    </select><small>Hadiah terpilih tampil di layar pengundian.</small></div>
+                <div class=" form-group"><label for="namaHadiah">Tambah nama hadiah</label><input id="namaHadiah"
+                                type="text" placeholder="Contoh: MESIN CUCI"><button type="button"
+                                class="btn neutral full" id="btnTambahHadiah">＋ TAMBAHKAN HADIAH</button></div>
+                <div class="form-group"><label>Logo & gambar hadiah (PNG)</label>
+                    <div class="asset-note">Untuk mengganti logo atau gambar hadiah, cukup ganti file PNG di folder
+                        <b>assets</b> dengan nama file yang sama. Tidak perlu mengubah kode aplikasi.
+                    </div>
+                </div>
+                <div class="form-group"><label for="interval">Kecepatan pengacakan</label><select id="interval">
+                        <option value="1">Cepat</option>
+                        <option value="10" selected>Normal</option>
+                        <option value="75">Lambat</option>
+                    </select></div>
+            </div>
+            <div class="rule-note"><b>Aturan:</b> setiap baris data adalah satu kupon. Sistem mengacak berdasarkan <b>NO_KUPON</b>; setelah STOP ditampilkan nomor kupon dan nama peserta. Kupon yang sudah menang tidak diundi kembali.</div>
+            <div class="action-row"><button class="btn primary" id="btnMulai">▶ MULAI UNDIAN</button><button
+                    class="btn danger" id="btnStop" disabled>■ STOP</button><button class="btn success" id="btnSah"
+                    disabled>✔ SAH</button><button class="btn neutral" id="btnResetKandidat" disabled>↶ BATALKAN
+                    KANDIDAT</button></div>
+            <div class="stats">
+                <div class="stat-card"><span>Kupon peserta</span><strong id="totalPeserta">0</strong></div>
+                <div class="stat-card"><span>Total nomor kupon</span><strong id="totalKupon">0</strong></div>
+                <div class="stat-card"><span>Kupon sudah menang</span><strong id="totalMenang">0</strong></div>
+                <div class="stat-card"><span>Kupon tersisa</span><strong id="totalSisa">0</strong></div>
+            </div>
+            <p id="statusImport" class="status-message">Silakan pilih file Excel peserta.</p>
+            <div class="export-row"><button class="btn outline-dark" id="btnDownloadNomor">⬇ DOWNLOAD SEMUA KUPON
+                    (EXCEL)</button><button class="btn outline-dark" id="btnExport">⬇ EXPORT PEMENANG
+                    EXCEL</button><button class="btn neutral" id="btnBackup">SIMPAN BACKUP</button><label
+                    class="btn neutral file-label">PULIHKAN BACKUP<input type="file" id="fileBackup"
+                        accept=".json"></label></div>
+        </section>
+        <section class="stage" id="stage">
+
+            <div class="stage-logos">
+                <img src="./assets/logo-bkk.png" alt="BPR BKK">
+                <div class="stage-heading">
+                    <div class="eyebrow">DOORPRIZE GEBYAR UNDIAN SIMPANAN 2026<br>PT BPR BKK BOYOLALI (Perseroda)
+                    </div>
+                </div>
+                <img src="./assets/spektamades.png" alt="Spektamades">
+            </div>
+            <h1 id="judulHadiah">TELEVISI LED 43&quot;</h1>
+            <div class="prize-image-wrap"><img id="gambarHadiah" alt="Gambar hadiah">
+                <div id="placeholderHadiah" class="prize-placeholder"><span id="giftIcon">🎁</span><b
+                        id="giftLabel">HADIAH UNDIAN</b><small>Pilih gambar hadiah untuk tampilan khusus</small></div>
+            </div>
+            <div class="draw-box">
+                <div class="draw-label">NOMOR UNDIAN</div>
+                <div class="draw-number" id="nomorKupon">SIAP</div>
+                <div class="draw-meta" id="detailPemenang">Informasi peserta tampil setelah tombol STOP ditekan.</div>
+                <div class="draw-name" id="namaPemenang">SIAP MEMULAI PENGUNDIAN</div>
+                <div class="draw-address" id="alamatPemenang"></div>
+                <div class="draw-address" id="kantorPemenang"></div>
+            </div>
+            <div class="winner-banner hidden" id="winnerBanner"><span>🏆</span>
+                <div><strong>PEMENANG RESMI</strong>
+                    <p id="pemenangResmi">Pemenang telah ditetapkan</p>
+                </div>
+            </div>
+            <div class="fullscreen-controls"><label class="fullscreen-prize-label">PILIH HADIAH <select
+                        id="pilihanHadiahFS"></select></label><button class="btn primary" id="btnMulaiFS">▶
+                    MULAI</button><button class="btn danger" id="btnStopFS" disabled>■ STOP</button><button
+                    class="btn success" id="btnSahFS" disabled>✔ SAH</button><button class="btn neutral"
+                    id="btnResetKandidatFS" disabled>↶ BATALKAN</button><button class="btn outline" id="btnKeluarFS">✕
+                    KELUAR FULLSCREEN</button></div>
+            <div class="doorprize-running-text" role="status" aria-label="Informasi berjalan">
+                <span>✨ GEBYAR UNDIAN SIMPANAN 2026 &nbsp; • &nbsp; PT BPR BKK BOYOLALI (Perseroda) &nbsp;
+                    • &nbsp; "MAS HANIN DAN MAS RIZAL" &nbsp; ✨</span>
+            </div>
+        </section>
+        <section class="panel winner-panel">
+            <div class="section-heading">
+                <div>
+                    <h2>Daftar Pemenang</h2>
+                    <p>Nomor kupon dan nama peserta yang telah disahkan.</p>
+                </div>
+                <div class="winner-actions"><button class="btn primary" id="btnUndianBerikutnya" hidden>▶ MULAI UNDIAN
+                        BERIKUTNYA</button><button class="btn outline-dark" id="btnHapusPemenang">HAPUS DAFTAR
+                        PEMENANG</button></div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>No. Kupon</th>
+                            <th>Hadiah</th>
+                            <th>Nama Peserta</th>
+                            <th>Waktu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daftarPemenang">
+                        <tr>
+                            <td colspan="5" class="empty-state">Belum ada pemenang.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer><span>PT BPR BKK BOYOLALI (Perseroda)</span><span>DOORPRIZE GEBYAR UNDIAN SIMPANAN 2026</span></footer>
+    <div class="toast" id="toast" role="status"></div>
+</body>
+
+</html>
